@@ -9,9 +9,9 @@
 
 $codes_path = __DIR__ . '/codes.txt';
 
-$targeted_ids = array(2429); // The targeted product ids (in this array)
-$file_contents = file_get_contents($codes_path, true);
-$valid_coupons = explode("\n", $file_contents);
+$targeted_ids = array(); // The targeted product ids (in this array as int)
+$file_contents = '';
+$valid_coupons = array();
 
 add_action( 'woocommerce_check_cart_items', 'mandatory_coupon_for_specific_items', 1 );
 function mandatory_coupon_for_specific_items() {
@@ -51,4 +51,25 @@ function mp_create_coupon( $data, $code ) {
 	
 	if(in_array($code, $valid_coupons)) return $code;
 }
+
+add_action('woocommerce_thankyou', 'delete_used_coupon', 10, 1);
+function delete_used_coupon( $order_id ) {
+
+	global $codes_path, $valid_coupons, $file_contents;
+	
+	$file_contents = file_get_contents($codes_path, true);
+	$valid_coupons = explode("\n", $file_contents);
+	
+	$order = new WC_Order( $order_id );
+
+	if( count( $order->get_coupon_codes() ) > 0 ) {	
+		foreach( $order->get_used_coupons() as $applied_coupon ){
+			if( in_array($applied_coupon, $valid_coupons) )  {
+				unset($valid_coupons[array_search($applied_coupon, $valid_coupons)]);
+				file_put_contents($codes_path, implode("\n", $valid_coupons));
+			}
+		}
+	}
+}
+
 ?>
