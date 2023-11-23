@@ -7,14 +7,16 @@
  * Author URI: https://github.com/Pablofl01/
  **/
 
+$targeted_ids = array(2429); // The targeted product ids (in this array)
+$valid_coupons = array('p3r1c0', 'p4r2c1');
+
 add_action( 'woocommerce_check_cart_items', 'mandatory_coupon_for_specific_items', 1 );
 function mandatory_coupon_for_specific_items() {
-    $targeted_ids   = array(2429); // The targeted product ids (in this array)
+	global $targeted_ids, $valid_coupons;
 
     $file_contents = file_get_contents('./codes.txt', true);
     //$valid_coupons = explode("\n", $file_contents);
-    $valid_coupons = array('p3r1c0', 'p4r2c1');
-
+    
     // Loop through cart items
     foreach(WC()->cart->get_cart() as $cart_item ) {
         // Check cart item for defined product Ids and applied coupon
@@ -36,4 +38,12 @@ function mandatory_coupon_for_specific_items() {
     }
 }
 
+
+add_filter( 'woocommerce_get_shop_coupon_data', 'mp_create_coupon', 10, 2  );
+function mp_create_coupon( $data, $code ) {
+	global $valid_coupons;
+	
+	if(in_array($code, $valid_coupons)) return $code;
+    
+}
 ?>
